@@ -1,2 +1,0 @@
-CloudFormationを使用するシンプルなAWS環境構築
-このプロジェクトは、AWS CloudFormationを使用してVPC、EC2、RDSとALBからなるシンプルなインフラ構築を自動化する学習。

@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS-Study_Simple_vpc-ec2-rds-alb
+Parameters:
+  Project:
+    Type: String
+    Default: aws-study
+    Description: "プロジェク名"
+
+  EC2SSHIP:
+    Type: String
+    Default: 192.168.27.159/32
+    Description: "ローカルPCからSSH接続用IPアドレス"
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: aws-study_20251010
+    Description: "EC2インスタンスに使用するキーペア名"
+
+  DBMasterUserName:
+    Type: String
+    Default: root
+    Description: "DBマスターユーザー名"
+
+  DBMasterPassword:
+    Type: String
+    Default: yjgakushin
+    Description: "DBマスターパスワード"
+
+Resources:
+  # VPC作成
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${Project}-vpc"
