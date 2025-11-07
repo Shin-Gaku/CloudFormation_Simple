@@ -8,6 +8,7 @@ Parameters:
   
   DBMasterPassword:
     Type: String
+    NoEcho: true #コンソール上に平文が露出しないように 20251107
     Description: "DBマスターパスワード"
 
 Resources:
@@ -146,7 +147,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: aws-study-ec2-sg
-      GroupDescription: aws-study-ec2-sg created 2025-11-03T13:47:41.733Z
+      GroupDescription: EC2-SG_SSH-MyPC_HTTP-ALB #20251107
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -180,51 +181,53 @@ Resources:
         - Key: Name
           Value: aws-study-ec2
 
-  RDSSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: rds-ec2-1
-      GroupDescription: Security group attached to aws-study-rds to allow EC2 instances with specific security groups attached to connect to the database. Modification could lead to connection loss.
-      VpcId: !Ref VPC
+  #コードでの最適化不要のため削除 20251107 start
+  #RDSSecurityGroup:
+    #Type: AWS::EC2::SecurityGroup
+    #Properties:
+      #GroupName: rds-ec2-1
+      #GroupDescription: Security group attached to aws-study-rds to allow EC2 instances with specific security groups attached to connect to the database. Modification could lead to connection loss.
+      #VpcId: !Ref VPC
 
-  EC2SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: ec2-rds-1
-      GroupDescription: Security group attached to instances to securely connect to aws-study-rds. Modification could lead to connection loss.
-      VpcId: !Ref VPC
+  #EC2SecurityGroup:
+    #Type: AWS::EC2::SecurityGroup
+    #Properties:
+      #GroupName: ec2-rds-1
+      #GroupDescription: Security group attached to instances to securely connect to aws-study-rds. Modification could lead to connection loss.
+      #VpcId: !Ref VPC
 
-  RDSSecurityGroupIngressFromEC2:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref RDSSecurityGroup
-      IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
-      SourceSecurityGroupId: !Ref EC2SecurityGroup
+  #RDSSecurityGroupIngressFromEC2:
+    #Type: AWS::EC2::SecurityGroupIngress
+    #Properties:
+      #GroupId: !Ref RDSSecurityGroup
+      #IpProtocol: tcp
+      #FromPort: 3306
+      #ToPort: 3306
+      #ourceSecurityGroupId: !Ref EC2SecurityGroup
 
-  RDSSecurityGroupEgressToEC2:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      GroupId: !Ref EC2SecurityGroup
-      IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
-      DestinationSecurityGroupId: !Ref RDSSecurityGroup
+  #RDSSecurityGroupEgressToEC2:
+    #Type: AWS::EC2::SecurityGroupEgress
+    #Properties:
+      #GroupId: !Ref EC2SecurityGroup
+      #IpProtocol: tcp
+      #FromPort: 3306
+      #ToPort: 3306
+      #DestinationSecurityGroupId: !Ref RDSSecurityGroup
 
-  RDSPrivateRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: RDS-Pvt-rt
+  #RDSPrivateRouteTable:
+    #Type: AWS::EC2::RouteTable
+    #Properties:
+      #VpcId: !Ref VPC
+      #Tags:
+        #- Key: Name
+          #Value: RDS-Pvt-rt
+#コードでの最適化不要のため削除 20251107 end
 
 # RDS用サブネットグループ
   RDSDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: Created from the RDS Management Console
+      DBSubnetGroupDescription: RDS-SubnetGroup #20251107
       SubnetIds: 
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -234,7 +237,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: aws-study-rds-sg
-      GroupDescription: Created by RDS management console
+      GroupDescription: RDS-MySql-SubnetGroup #20251107
       VpcId: !Ref VPC
 
 # セキュリティグループのインバウンドルール（RDS用）
@@ -256,7 +259,7 @@ Resources:
       DBInstanceClass: db.t4g.micro
       DBSubnetGroupName: !Ref RDSDBSubnetGroup
       VPCSecurityGroups: 
-        - !Ref RDSSecurityGroup
+        #- !Ref RDSSecurityGroup #20251107
         - !Ref RDSInstanceSecurityGroup
       AllocatedStorage: 20
       BackupRetentionPeriod: 1
@@ -276,7 +279,7 @@ Resources:
   SecurityGroupALB:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: ALB-HTTP
+      GroupDescription: ALB-HTTPlistener #20251107
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
