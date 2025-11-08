@@ -10,6 +10,18 @@ Parameters:
     Type: String
     NoEcho: true #コンソール上に平文が露出しないように 20251107
     Description: "DBマスターパスワード"
+  
+  #RDS MonitoringRoleArnパラメータ化 20251108 start
+  RDSMonitoringRole:
+    Type: String
+    Default: arn:aws:iam::029377893487:role/rds-monitoring-role
+    Description: "RDS MonitoringRoleArn"
+
+  # AMIは最新のAMI IDをパラメータストアから取得する
+  Ec2ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  #20251108 end
 
 Resources:
 # VPC作成
@@ -163,7 +175,7 @@ Resources:
   AwsStudyEc2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Sub "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+      ImageId: !Ref Ec2ImageId #20251108
       InstanceType: t3.micro
       KeyName: aws-study_20251010
       SubnetId: !Ref PublicSubnet1
@@ -180,48 +192,6 @@ Resources:
       Tags:
         - Key: Name
           Value: aws-study-ec2
-
-  #コードでの最適化不要のため削除 20251107 start
-  #RDSSecurityGroup:
-    #Type: AWS::EC2::SecurityGroup
-    #Properties:
-      #GroupName: rds-ec2-1
-      #GroupDescription: Security group attached to aws-study-rds to allow EC2 instances with specific security groups attached to connect to the database. Modification could lead to connection loss.
-      #VpcId: !Ref VPC
-
-  #EC2SecurityGroup:
-    #Type: AWS::EC2::SecurityGroup
-    #Properties:
-      #GroupName: ec2-rds-1
-      #GroupDescription: Security group attached to instances to securely connect to aws-study-rds. Modification could lead to connection loss.
-      #VpcId: !Ref VPC
-
-  #RDSSecurityGroupIngressFromEC2:
-    #Type: AWS::EC2::SecurityGroupIngress
-    #Properties:
-      #GroupId: !Ref RDSSecurityGroup
-      #IpProtocol: tcp
-      #FromPort: 3306
-      #ToPort: 3306
-      #ourceSecurityGroupId: !Ref EC2SecurityGroup
-
-  #RDSSecurityGroupEgressToEC2:
-    #Type: AWS::EC2::SecurityGroupEgress
-    #Properties:
-      #GroupId: !Ref EC2SecurityGroup
-      #IpProtocol: tcp
-      #FromPort: 3306
-      #ToPort: 3306
-      #DestinationSecurityGroupId: !Ref RDSSecurityGroup
-
-  #RDSPrivateRouteTable:
-    #Type: AWS::EC2::RouteTable
-    #Properties:
-      #VpcId: !Ref VPC
-      #Tags:
-        #- Key: Name
-          #Value: RDS-Pvt-rt
-#コードでの最適化不要のため削除 20251107 end
 
 # RDS用サブネットグループ
   RDSDBSubnetGroup:
@@ -259,13 +229,12 @@ Resources:
       DBInstanceClass: db.t4g.micro
       DBSubnetGroupName: !Ref RDSDBSubnetGroup
       VPCSecurityGroups: 
-        #- !Ref RDSSecurityGroup #20251107
         - !Ref RDSInstanceSecurityGroup
       AllocatedStorage: 20
       BackupRetentionPeriod: 1
-      MonitoringRoleArn: arn:aws:iam::029377893487:role/rds-monitoring-role
+      MonitoringRoleArn: !Ref RDSMonitoringRole #パラメータ化 20251108
       MonitoringInterval: 60
-      EnableCloudwatchLogsExports: 
+      EnableCloudwatchLogsExports:
         - audit
         - error
         - general
@@ -397,7 +366,7 @@ Resources:
   WebACLAssociation:
     Type: AWS::WAFv2::WebACLAssociation
     Properties:
-      ResourceArn: !Ref ALB
+      ResourceArn: !GetAtt ALB.LoadBalancerArn #20251108
       WebACLArn: !GetAtt WebACL.Arn
 
 # WAFLogグループ（CloudWatchアラームやCloudWatch Logsのログ出力）
